@@ -154,7 +154,8 @@ async function quickAction(r,mode,{advanceRapid=false}={}){
  }
 }
 function rapidEligible(){
- return filtered().filter(r=>val(r,"Status")==="New"&&!isExpired(r)).sort((a,b)=>(date(val(b,"Received"))?.getTime()||0)-(date(val(a,"Received"))?.getTime()||0));
+ return filtered().filter(r=>val(r,"Status")==="New"&&val(r,"Marketing Status")!=="Skip"&&!isExpired(r))
+   .sort((a,b)=>(date(val(b,"Received"))?.getTime()||0)-(date(val(a,"Received"))?.getTime()||0));
 }
 function supplierName(r){
  return String(val(r,"Supplier")||val(r,"Sender")||"Unknown supplier").trim();
@@ -229,15 +230,39 @@ function renderRapid(){
   '<div class="rapid-supplier">'+esc(supplierName(r))+'</div>'+
   '<div class="rapid-meta">'+esc(senderLine(r))+'</div>'+
   '<div class="rapid-title">'+esc(val(r,"Subject"))+'</div><div class="mode-points">'+score(r)+' pts</div>'+
+  '<a class="mode-email" href="'+esc(emailHref(r))+'" target="_blank" rel="noopener">Open email</a>'+
   '<span class="rapid-deal">'+esc(deal)+'</span>'+
   (val(r,"Deal Summary")?'<div class="rapid-copy"><strong>'+esc(val(r,"Deal Summary"))+'</strong></div>':'')+
   '<div class="rapid-copy">'+esc(val(r,"Summary"))+'</div>'+
-  (val(r,"Validity")&&val(r,"Validity")!=="Not stated"?'<div class="rapid-validity">Validity: '+esc(val(r,"Validity"))+'</div>':'');
+  (val(r,"Validity")&&val(r,"Validity")!=="Not stated"?'<div class="rapid-validity">Validity: '+esc(val(r,"Validity"))+'</div>':'')+
+  '<div class="swipe-hint">Swipe left −5 · Swipe right +5</div>';
+
 }
 function enterRapid(){
  rapidRows=rapidEligible();rapidIndex=0;renderRapid();$("rapid").showModal();
 }
 function currentRapid(){rapidRows=rapidEligible();return rapidRows[rapidIndex]||rapidRows[0]||null;}
+async function tinderVote(delta){
+ const r=currentRapid();if(!r)return;
+ const before=snapshot(r),now=new Date().toISOString();
+ const updates={"Points":String(score(r)+Number(delta)),"Status":"Reviewed","Reviewed Date":val(r,"Reviewed Date")||now};
+ if(await writeFields(r,updates)){
+   actionHistory.push(before);
+   render();
+   rapidRows=rapidEligible();
+   if(rapidIndex>=rapidRows.length)rapidIndex=Math.max(0,rapidRows.length-1);
+   renderRapid();
+ }
+}
+function bindTinderSwipe(){
+ const card=$("rapidCard");if(!card)return;
+ let startX=0,startY=0,drag=false;
+ card.onpointerdown=e=>{if(e.target.closest("a,button"))return;drag=true;startX=e.clientX;startY=e.clientY;card.setPointerCapture?.(e.pointerId);card.classList.add("dragging")};
+ card.onpointermove=e=>{if(!drag)return;const dx=e.clientX-startX,dy=e.clientY-startY;if(Math.abs(dx)>Math.abs(dy)){card.style.transform="translateX("+dx+"px) rotate("+(dx/30)+"deg)";card.style.opacity=String(Math.max(.55,1-Math.abs(dx)/500))}};
+ card.onpointerup=e=>{if(!drag)return;drag=false;card.classList.remove("dragging");const dx=e.clientX-startX;card.style.transform="";card.style.opacity="";if(Math.abs(dx)>=80)tinderVote(dx>0?5:-5)};
+ card.onpointercancel=()=>{drag=false;card.classList.remove("dragging");card.style.transform="";card.style.opacity=""};
+}
+
 function compareEligible(){
  return filtered().filter(r=>val(r,"Status")==="New"&&!isExpired(r)).sort((a,b)=>(date(val(b,"Received"))?.getTime()||0)-(date(val(a,"Received"))?.getTime()||0));
 }
@@ -247,11 +272,12 @@ function compareCardHtml(r,side){
   '<div class="compare-supplier">'+esc(supplierName(r))+'</div>'+
   '<div class="compare-meta">'+esc(senderLine(r))+'</div>'+
   '<div class="compare-title">'+esc(val(r,"Subject"))+'</div><div class="mode-points">'+score(r)+' pts</div>'+
+  '<a class="mode-email" data-compare-email href="'+esc(emailHref(r))+'" target="_blank" rel="noopener">Open email</a>'+
   '<span class="compare-deal">'+esc(deal)+'</span>'+
   (val(r,"Deal Summary")?'<div class="compare-copy"><strong>'+esc(val(r,"Deal Summary")).slice(0,360)+'</strong></div>':'')+
   (val(r,"Summary")?'<div class="compare-copy compare-description">'+esc(val(r,"Summary")).slice(0,420)+'</div>':'')+
   (val(r,"Validity")&&val(r,"Validity")!=="Not stated"?'<div class="compare-validity">Validity: '+esc(val(r,"Validity"))+'</div>':'')+
-  '<div class="compare-pick">Tap to promote</div>'+
+  '<div class="compare-pick">Tap your pick: +5 · Other: −5</div>'+
  '</article>';
 }
 function renderCompare(){
@@ -264,16 +290,15 @@ function renderCompare(){
  comparePair=[compareRows[0],compareRows[1]];
  $("compareCount").textContent=compareRows.length+" valid unreviewed";
  $("compareGrid").innerHTML=compareCardHtml(comparePair[0],"0")+compareCardHtml(comparePair[1],"1");
- document.querySelectorAll(".compare-card").forEach(c=>c.onclick=()=>chooseCompare(Number(c.dataset.side)));
+ document.querySelectorAll(".compare-card").forEach(c=>c.onclick=e=>{if(e.target.closest("[data-compare-email]"))return;chooseCompare(Number(c.dataset.side))});
 }
 async function chooseCompare(side){
  if(comparePair.length<2)return;
  const winner=comparePair[side],loser=comparePair[side===0?1:0],now=new Date().toISOString();
  const snapW=snapshot(winner),snapL=snapshot(loser);
- const winUpdates={"Marketing Status":"Shortlist","Status":"Action","Reviewed Date":val(winner,"Reviewed Date")||now};
- const loseUpdates={"Marketing Status":"Candidate","Status":"Reviewed","Reviewed Date":val(loser,"Reviewed Date")||now};
- const ok1=await writeFields(winner,winUpdates);
- if(!ok1)return;
+ const winUpdates={"Points":String(score(winner)+5),"Status":"Reviewed","Reviewed Date":val(winner,"Reviewed Date")||now};
+ const loseUpdates={"Points":String(score(loser)-5),"Status":"Reviewed","Reviewed Date":val(loser,"Reviewed Date")||now};
+ const ok1=await writeFields(winner,winUpdates);if(!ok1)return;
  const ok2=await writeFields(loser,loseUpdates);
  if(!ok2){await writeFields(winner,snapW.values);return;}
  actionHistory.push({compare:true,winner:snapW,loser:snapL});
@@ -315,6 +340,7 @@ function renderPoints(){
    '<div class="rapid-supplier">'+esc(supplierName(r))+'</div>'+
    '<div class="rapid-meta">'+esc(senderLine(r))+'</div>'+
    '<div class="rapid-title">'+esc(val(r,"Subject"))+'</div>'+
+   '<a class="mode-email" href="'+esc(emailHref(r))+'" target="_blank" rel="noopener">Open email</a>'+
    '<div class="points-total">'+score(r)+'<span>points</span></div>'+
    '<span class="rapid-deal">'+esc(deal)+'</span>'+
    (val(r,"Deal Summary")?'<div class="rapid-copy"><strong>'+esc(val(r,"Deal Summary"))+'</strong></div>':'')+
@@ -388,8 +414,8 @@ $("pointsExit").onclick=()=>$("points").close();
 document.querySelectorAll(".points-adjust").forEach(b=>b.onclick=()=>adjustPoints(Number(b.dataset.delta)));
 $("rapidExit").onclick=()=>$("rapid").close();
 $("rapidBack").onclick=undoLast;
-$("rapidPromote").onclick=()=>{const r=currentRapid();if(r)quickAction(r,"promote",{advanceRapid:true})};
-$("rapidDemote").onclick=()=>{const r=currentRapid();if(r)quickAction(r,"demote",{advanceRapid:true})};
+$("rapidPromote").onclick=()=>tinderVote(5);
+$("rapidDemote").onclick=()=>tinderVote(-5);
 $("rapidSkip").onclick=()=>{const r=currentRapid();if(r)quickAction(r,"skip",{advanceRapid:true})};
 render();
 
