@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#08111f">
 <title>Eblast Marketing Game</title>
-<link rel="stylesheet" href="styles-v9.css">
+<link rel="stylesheet" href="styles-v10.css">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 <div class="shell">
-<header><div><small>EBLAST INTELLIGENCE · MOBILE V9</small><h1>Marketing Game</h1></div><button id="auth">Connect Google</button></header>
+<header><div><small>EBLAST INTELLIGENCE · MOBILE V10</small><h1>Marketing Game</h1></div><button id="auth">Connect Google</button></header>
 
 <section class="scores">
 <div><b id="daily">0</b><span>Daily / 10</span></div>
@@ -53,7 +53,10 @@
   <div class="multi-options" id="dealTypeOptions"></div>
 </details>
 </section>
-<button id="rapidBtn" class="rapid-launch">Rapid Review</button>
+<div class="mode-launches">
+  <button id="rapidBtn" class="rapid-launch">Rapid Review</button>
+  <button id="compareBtn" class="compare-launch">Compare Mode</button>
+</div>
 
 <p id="status">Connect Google to load the sheet.</p>
 <main id="cards"></main>
@@ -97,6 +100,16 @@
   </section>
 </dialog>
 
-<script src="config.js?v=20261003-9"></script>
-<script src="app-v9.js"></script>
+<dialog id="compare">
+  <section class="compare-shell">
+    <div class="compare-top">
+      <button type="button" id="compareExit" class="btn-quiet">Exit</button>
+      <div id="compareCount" class="rapid-count"></div>
+    </div>
+    <div id="compareGrid" class="compare-grid"></div>
+  </section>
+</dialog>
+
+<script src="config.js?v=20261003-10"></script>
+<script src="app-v10.js"></script>
 </body></html>
