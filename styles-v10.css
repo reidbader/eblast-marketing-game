@@ -568,3 +568,12 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
   .rapid-actions{grid-template-columns:repeat(4,minmax(0,1fr))}
   .rapid-actions button,.rapid-actions a{font-size:10px;padding:6px 3px}
 }
+
+/* V14 multiselect filters + point-only card actions */
+.card-quick-actions{grid-template-columns:repeat(4,1fr)}
+.card-minus5{background:#4c1d1d;border-color:#ef4444;color:#fff}
+.card-plus5{background:#14532d;border-color:#22c55e;color:#fff}
+.card-plus10{background:#0f766e;border-color:#2dd4bf;color:#fff}
+@media(max-width:700px){
+  .card-quick-actions{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
