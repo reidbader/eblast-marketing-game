@@ -90,12 +90,16 @@ function filtered(){
  const activities=selectedMulti("activityOptions");
  const travelers=selectedMulti("travelerOptions");
  const dealTypes=selectedMulti("dealTypeOptions");
+ const dealScope=$("dealScope")?.value||"";
  return rows.filter(r=>{
   if(q && !["Subject","Sender","Supplier","Summary","Region","Category","Destination","Continent","Sender Type","Activity","Traveler Type","Deal Type","Marketing Angle","Reid Tags"].map(k=>val(r,k)).join(" ").toLowerCase().includes(q)) return false;
   if(continents.length && !continents.includes(val(r,"Continent"))) return false;
   if(senderTypes.length && !senderTypes.includes(val(r,"Sender Type"))) return false;
   if(activities.length && !activities.includes(val(r,"Activity"))) return false;
   if(travelers.length && !travelers.includes(val(r,"Traveler Type"))) return false;
+  const deal=String(val(r,"Deal Type")||"No Deal / News").trim();
+  if(dealScope==="deals" && deal==="No Deal / News") return false;
+  if(dealScope==="news" && deal!=="No Deal / News") return false;
   if(dealTypes.length && !dealTypes.includes(val(r,"Deal Type"))) return false;
   return true;
  });
@@ -416,6 +420,7 @@ function auth(){
 }
 $("auth").onclick=auth;
 $("q").addEventListener("input",render);
+$("dealScope").addEventListener("change",render);
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");view=b.dataset.view;render()});
 document.querySelectorAll(".period").forEach(b=>b.onclick=()=>{document.querySelectorAll(".period").forEach(x=>x.classList.remove("active"));b.classList.add("active");period=b.dataset.period;render()});
 document.querySelectorAll(".top-size").forEach(b=>b.onclick=()=>{document.querySelectorAll(".top-size").forEach(x=>x.classList.remove("active"));b.classList.add("active");topLimit=b.dataset.limit==="all"?"all":Number(b.dataset.limit);render()});
