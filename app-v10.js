@@ -220,9 +220,9 @@ function renderRapid(){
  if(!rapidRows.length){
   $("rapidCount").textContent="0 valid unreviewed";
   box.innerHTML='<div class="empty">No valid unreviewed cards remain.</div>';
-  $("rapidPromote").disabled=true;$("rapidDemote").disabled=true;$("rapidSkip").disabled=true;return;
+  $("rapidPromote").disabled=true;$("rapidDemote").disabled=true;$("rapidEmail").href="#";return;
  }
- $("rapidPromote").disabled=false;$("rapidDemote").disabled=false;$("rapidSkip").disabled=false;
+ $("rapidPromote").disabled=false;$("rapidDemote").disabled=false;
  if(rapidIndex>=rapidRows.length)rapidIndex=0;
  const r=rapidRows[rapidIndex],deal=val(r,"Deal Type")||"No Deal / News";
  $("rapidCount").textContent=(rapidIndex+1)+" of "+rapidRows.length+" valid unreviewed";
@@ -236,7 +236,8 @@ function renderRapid(){
   '<div class="rapid-copy">'+esc(val(r,"Summary"))+'</div>'+
   (val(r,"Validity")&&val(r,"Validity")!=="Not stated"?'<div class="rapid-validity">Validity: '+esc(val(r,"Validity"))+'</div>':'')+
   '<div class="swipe-hint">Swipe left −5 · Swipe right +5</div>';
-
+ $("rapidEmail").href=emailHref(r);
+ bindTinderSwipe();
 }
 function enterRapid(){
  rapidRows=rapidEligible();rapidIndex=0;renderRapid();$("rapid").showModal();
@@ -416,7 +417,7 @@ $("rapidExit").onclick=()=>$("rapid").close();
 $("rapidBack").onclick=undoLast;
 $("rapidPromote").onclick=()=>tinderVote(5);
 $("rapidDemote").onclick=()=>tinderVote(-5);
-$("rapidSkip").onclick=()=>{const r=currentRapid();if(r)quickAction(r,"skip",{advanceRapid:true})};
+
 render();
 
 const filterToggle=document.getElementById("filterToggle");
