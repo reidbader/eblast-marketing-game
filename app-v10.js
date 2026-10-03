@@ -174,8 +174,8 @@ function render(){
  '<div class="sender-meta">'+esc(val(r,"Sender Type"))+' · '+esc(val(r,"Continent"))+'</div>'+
  '<div class="card-title">'+esc(val(r,"Subject"))+'</div></div>'+
  '<div class="card-side"><div class="score">'+score(r)+'</div><span class="deal-badge '+(deal==="No Deal / News"?"none":"")+'">'+esc(deal)+'</span></div></div>'+
- (val(r,"Deal Summary")?'<p class="deal-summary-card">'+esc(val(r,"Deal Summary")).slice(0,260)+'</p>':'')+
- '<p>'+esc(val(r,"Summary")).slice(0,250)+'</p><div class="chips">'+cardChips(r)+'</div>'+
+ (val(r,"Deal Summary")?'<p class="deal-summary-card">'+esc(val(r,"Deal Summary")).slice(0,360)+'</p>':'')+
+ (val(r,"Summary")?'<p class="card-description">'+esc(val(r,"Summary")).slice(0,420)+'</p>':'')+'<div class="chips">'+cardChips(r)+'</div>'+
  '<div class="card-quick-actions">'+
  '<button class="card-back" data-action="back">Back</button>'+
  '<button class="card-demote" data-action="demote">Demote</button>'+
@@ -230,7 +230,8 @@ function compareCardHtml(r,side){
   '<div class="compare-meta">'+esc(val(r,"Sender Type"))+' · '+esc(val(r,"Continent"))+'</div>'+
   '<div class="compare-title">'+esc(val(r,"Subject"))+'</div>'+
   '<span class="compare-deal">'+esc(deal)+'</span>'+
-  (val(r,"Deal Summary")?'<div class="compare-copy"><strong>'+esc(val(r,"Deal Summary"))+'</strong></div>':'')+
+  (val(r,"Deal Summary")?'<div class="compare-copy"><strong>'+esc(val(r,"Deal Summary")).slice(0,360)+'</strong></div>':'')+
+  (val(r,"Summary")?'<div class="compare-copy compare-description">'+esc(val(r,"Summary")).slice(0,420)+'</div>':'')+
   (val(r,"Validity")&&val(r,"Validity")!=="Not stated"?'<div class="compare-validity">Validity: '+esc(val(r,"Validity"))+'</div>':'')+
   '<div class="compare-pick">Tap to promote</div>'+
  '</article>';
