@@ -549,3 +549,22 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
  .points-actions{grid-template-columns:repeat(3,1fr)}
  .points-actions button{min-height:50px}
 }
+
+/* V13 Tinder + Hot or Not */
+.rapid-card{touch-action:pan-y;transition:transform .18s ease,opacity .18s ease}
+.rapid-card.dragging{transition:none}
+.swipe-hint{margin-top:14px;padding-top:10px;border-top:1px solid #263852;color:#9fb0c7;font-size:12px;font-weight:800;text-align:center}
+.mode-email,.rapid-email{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:40px;padding:8px 10px;margin:0 0 10px;
+  background:#17324a;border:1px solid #4f78a4;border-radius:10px;
+  color:#fff;text-decoration:none;font-size:11px;font-weight:850
+}
+.rapid-email{margin:0}
+.rapid-actions{grid-template-columns:repeat(4,1fr)}
+.rapid-actions a{min-height:52px}
+.compare-pick{color:#fde68a}
+@media(max-width:700px){
+  .rapid-actions{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .rapid-actions button,.rapid-actions a{font-size:10px;padding:6px 3px}
+}
