@@ -45,6 +45,13 @@
 <button id="filterToggle" class="filter-toggle">Filters</button>
 <section class="filters" id="filtersPanel">
 <input id="q" placeholder="Search">
+<details class="multi-filter supplier-filter" id="supplierFilter">
+  <summary id="supplierSummary">All suppliers</summary>
+  <div class="multi-options supplier-options">
+    <input id="supplierSearch" class="multi-search" type="search" placeholder="Type to filter suppliers">
+    <div id="supplierOptions"></div>
+  </div>
+</details>
 <details class="multi-filter" id="continentFilter">
   <summary id="continentSummary">All continents</summary>
   <div class="multi-options" id="continentOptions"></div>
@@ -148,5 +155,5 @@
 </dialog>
 
 <script src="config.js?v=20261003-10"></script>
-<script src="app-v10.js?v=20261003-18"></script>
+<script src="app-v10.js?v=20261003-19"></script>
 </body></html>
