@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#08111f">
 <title>Eblast Marketing Game</title>
-<link rel="stylesheet" href="styles-v6.css">
+<link rel="stylesheet" href="styles-v7.css">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 <div class="shell">
-<header><div><small>EBLAST INTELLIGENCE · MOBILE V6</small><h1>Marketing Game</h1></div><button id="auth">Connect Google</button></header>
+<header><div><small>EBLAST INTELLIGENCE · MOBILE V7</small><h1>Marketing Game</h1></div><button id="auth">Connect Google</button></header>
 
 <section class="scores">
 <div><b id="daily">0</b><span>Daily / 10</span></div>
@@ -38,7 +38,14 @@
 <button id="filterToggle" class="filter-toggle">Filters</button>
 <section class="filters" id="filtersPanel">
 <input id="q" placeholder="Search">
-<select id="destination"><option value="">All destinations</option></select>
+<details class="multi-filter" id="continentFilter">
+  <summary id="continentSummary">All continents</summary>
+  <div class="multi-options" id="continentOptions"></div>
+</details>
+<details class="multi-filter" id="senderTypeFilter">
+  <summary id="senderTypeSummary">All sender types</summary>
+  <div class="multi-options" id="senderTypeOptions"></div>
+</details>
 <select id="activity"><option value="">All activities</option></select>
 <select id="traveler"><option value="">All travelers</option></select>
 <select id="deal"><option value="">All deal types</option></select>
@@ -70,6 +77,6 @@
 <div class="actions"><a id="source" target="_blank">Open email</a><button type="button" id="skip">Skip</button><button type="button" id="promote">Promote</button><button type="button" id="save">Save & Next</button></div>
 </form></dialog>
 
-<script src="config.js?v=20261003-6"></script>
-<script src="app-v6.js"></script>
+<script src="config.js?v=20261003-7"></script>
+<script src="app-v7.js"></script>
 </body></html>
