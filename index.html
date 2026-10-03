@@ -63,6 +63,7 @@
 <div class="mode-launches">
   <button id="rapidBtn" class="rapid-launch">Rapid Review</button>
   <button id="compareBtn" class="compare-launch">Compare Mode</button>
+  <button id="pointsBtn" class="points-launch">Points Mode</button>
 </div>
 
 <p id="status">Connect Google to load the sheet.</p>
@@ -117,6 +118,24 @@
   </section>
 </dialog>
 
+<dialog id="points">
+  <section class="points-shell">
+    <div class="rapid-top">
+      <button type="button" id="pointsExit" class="btn-quiet">Exit</button>
+      <div id="pointsCount" class="rapid-count"></div>
+    </div>
+    <div id="pointsCard" class="rapid-card"></div>
+    <div class="points-actions">
+      <button type="button" class="points-adjust minus" data-delta="-25">−25</button>
+      <button type="button" class="points-adjust minus" data-delta="-10">−10</button>
+      <button type="button" class="points-adjust minus" data-delta="-1">−1</button>
+      <button type="button" class="points-adjust plus" data-delta="1">+1</button>
+      <button type="button" class="points-adjust plus" data-delta="10">+10</button>
+      <button type="button" class="points-adjust plus" data-delta="25">+25</button>
+    </div>
+  </section>
+</dialog>
+
 <script src="config.js?v=20261003-10"></script>
-<script src="app-v10.js?v=20261003-14"></script>
+<script src="app-v10.js?v=20261003-15"></script>
 </body></html>
