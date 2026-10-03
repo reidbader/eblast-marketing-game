@@ -87,14 +87,17 @@ function filtered(){
  const q=$("q").value.toLowerCase().trim();
  const continents=selectedMulti("continentOptions");
  const senderTypes=selectedMulti("senderTypeOptions");
+ const activities=selectedMulti("activityOptions");
+ const travelers=selectedMulti("travelerOptions");
  const dealTypes=selectedMulti("dealTypeOptions");
- const simple=[["Activity","activity"],["Traveler Type","traveler"]];
  return rows.filter(r=>{
   if(q && !["Subject","Sender","Supplier","Summary","Region","Category","Destination","Continent","Sender Type","Activity","Traveler Type","Deal Type","Marketing Angle","Reid Tags"].map(k=>val(r,k)).join(" ").toLowerCase().includes(q)) return false;
   if(continents.length && !continents.includes(val(r,"Continent"))) return false;
   if(senderTypes.length && !senderTypes.includes(val(r,"Sender Type"))) return false;
+  if(activities.length && !activities.includes(val(r,"Activity"))) return false;
+  if(travelers.length && !travelers.includes(val(r,"Traveler Type"))) return false;
   if(dealTypes.length && !dealTypes.includes(val(r,"Deal Type"))) return false;
-  return simple.every(([f,id])=>!$(id).value||val(r,f)===$(id).value);
+  return true;
  });
 }
 function inPeriod(r,p){
@@ -131,6 +134,13 @@ async function writeFields(r,updates){
  if(!resp.ok){alert("Update failed: "+await resp.text());return false}
  Object.entries(updates).forEach(([k,v])=>setVal(r,k,v));
  return true;
+}
+async function adjustCardPoints(r,delta){
+ if(!r||isExpired(r))return;
+ const now=new Date().toISOString();
+ if(await writeFields(r,{"Points":String(score(r)+Number(delta)),"Status":"Reviewed","Reviewed Date":val(r,"Reviewed Date")||now})){
+   render();
+ }
 }
 function snapshot(r){
  return {row:r,values:{
@@ -194,21 +204,20 @@ function render(){
  (val(r,"Summary")?'<p class="card-description">'+esc(val(r,"Summary")).slice(0,420)+'</p>':'')+'<div class="chips">'+cardChips(r)+'</div>'+
  '<div class="card-quick-actions">'+
  '<a class="card-email" data-email-link href="'+esc(emailHref(r))+'" target="_blank" rel="noopener">Email</a>'+
- '<button class="card-back" data-action="back">Back</button>'+
- '<button class="card-demote" data-action="demote">Demote</button>'+
- '<button class="card-skip" data-action="skip">Skip</button>'+
- '<button class="card-promote" data-action="promote">Promote</button>'+
+ '<button class="card-minus5" data-points="-5">−5</button>'+
+ '<button class="card-plus5" data-points="5">+5</button>'+
+ '<button class="card-plus10" data-points="10">+10</button>'+
  '</div></article>';
  }).join(""):'<div class="empty">'+(view==="inbox"?"No new items in the queue.":"No items match this view.")+'</div>';
  document.querySelectorAll(".card").forEach(c=>{
   c.addEventListener("click",e=>{
    const email=e.target.closest("[data-email-link]");
    if(email){e.stopPropagation();return;}
-   const btn=e.target.closest("button[data-action]");
-   if(btn){
+   const pointBtn=e.target.closest("button[data-points]");
+   if(pointBtn){
     e.stopPropagation();
     const r=rows.find(x=>x.sheetRow===Number(c.dataset.row));
-    if(btn.dataset.action==="back")undoLast(); else quickAction(r,btn.dataset.action);
+    adjustCardPoints(r,Number(pointBtn.dataset.points));
     return;
    }
    openEditor(Number(c.dataset.row));
@@ -386,7 +395,6 @@ async function save(mode){
  const resp=await fetch("https://sheets.googleapis.com/v4/spreadsheets/"+encodeURIComponent(CFG.spreadsheetId)+"/values:batchUpdate",{method:"POST",headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},body:JSON.stringify({valueInputOption:"RAW",data})});
  if(!resp.ok){alert("Save failed: "+await resp.text());return}
  Object.entries(u).forEach(([k,v])=>setVal(activeRow,k,v));
- ["activity","traveler"].forEach((id,j)=>options(id,["Activity","Traveler Type"][j]));
  $("editor").close();render();
  const next=list()[0];if(view==="inbox"&&next)openEditor(next.sheetRow);
 }
@@ -394,7 +402,12 @@ async function load(){
  const range=encodeURIComponent("'"+CFG.sheetName+"'!A1:AC2000"),resp=await fetch("https://sheets.googleapis.com/v4/spreadsheets/"+encodeURIComponent(CFG.spreadsheetId)+"/values/"+range+"?majorDimension=ROWS",{headers:{Authorization:"Bearer "+accessToken}});
  if(!resp.ok){$("status").textContent="Could not read the sheet.";return}
  const p=await resp.json(),v=p.values||[];headers=v[0]||[];rows=v.slice(1).filter(r=>r.some(Boolean)).map((x,i)=>({sheetRow:i+2,values:[...x]}));rows.forEach(r=>{while(r.values.length<headers.length)r.values.push("")});
- buildMulti("continentOptions","continentSummary","Continent");buildMulti("senderTypeOptions","senderTypeSummary","Sender Type");buildMulti("dealTypeOptions","dealTypeSummary","Deal Type");options("activity","Activity");options("traveler","Traveler Type");render();
+ buildMulti("continentOptions","continentSummary","Continent");
+ buildMulti("senderTypeOptions","senderTypeSummary","Sender Type");
+ buildMulti("activityOptions","activitySummary","Activity");
+ buildMulti("travelerOptions","travelerSummary","Traveler Type");
+ buildMulti("dealTypeOptions","dealTypeSummary","Deal Type");
+ render();
 }
 function auth(){
  if(CFG.googleClientId.includes("PASTE_")){alert("Google OAuth still needs to be configured in config.js.");return}
@@ -402,7 +415,7 @@ function auth(){
  tokenClient.requestAccessToken({prompt:accessToken?"":"consent"});
 }
 $("auth").onclick=auth;
-["q","activity","traveler"].forEach(id=>$(id).addEventListener(id==="q"?"input":"change",render));
+$("q").addEventListener("input",render);
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");view=b.dataset.view;render()});
 document.querySelectorAll(".period").forEach(b=>b.onclick=()=>{document.querySelectorAll(".period").forEach(x=>x.classList.remove("active"));b.classList.add("active");period=b.dataset.period;render()});
 document.querySelectorAll(".top-size").forEach(b=>b.onclick=()=>{document.querySelectorAll(".top-size").forEach(x=>x.classList.remove("active"));b.classList.add("active");topLimit=b.dataset.limit==="all"?"all":Number(b.dataset.limit);render()});
