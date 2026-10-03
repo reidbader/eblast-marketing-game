@@ -5,18 +5,36 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#08111f">
 <title>Eblast Marketing Game</title>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=20261003-2">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 <div class="shell">
 <header><div><small>EBLAST INTELLIGENCE</small><h1>Marketing Game</h1></div><button id="auth">Connect Google</button></header>
+
 <section class="scores">
 <div><b id="daily">0</b><span>Daily / 10</span></div>
 <div><b id="weekly">0</b><span>Weekly / 50</span></div>
 <div><b id="monthly">0</b><span>Monthly / 200</span></div>
 </section>
-<nav><button class="tab active" data-view="inbox">Inbox</button><button class="tab" data-view="top10">Top 10</button><button class="tab" data-view="ready">Ready</button></nav>
+
+<section class="mission" id="mission">
+  <div><small>TODAY'S MISSION</small><strong id="missionText">Review 10 new marketing blasts</strong></div>
+  <div class="progress"><span id="missionBar"></span></div>
+</section>
+
+<nav>
+<button class="tab active" data-view="inbox">Daily Queue</button>
+<button class="tab" data-view="top10">Top 10</button>
+<button class="tab" data-view="ready">Ready</button>
+</nav>
+
+<div id="periodTabs" class="period-tabs hidden">
+  <button class="period active" data-period="daily">Daily</button>
+  <button class="period" data-period="weekly">Weekly</button>
+  <button class="period" data-period="monthly">Monthly</button>
+</div>
+
 <section class="filters">
 <input id="q" placeholder="Search">
 <select id="destination"><option value="">All destinations</option></select>
@@ -24,12 +42,17 @@
 <select id="traveler"><option value="">All travelers</option></select>
 <select id="deal"><option value="">All deal types</option></select>
 </section>
+
 <p id="status">Connect Google to load the sheet.</p>
 <main id="cards"></main>
 </div>
+
 <dialog id="editor"><form method="dialog">
 <button class="close">×</button>
-<small id="sender"></small><h2 id="subject"></h2><p id="summary"></p><p id="why"></p><p id="validity"></p>
+<small id="sender"></small><h2 id="subject"></h2>
+<div class="detail-meta" id="detailMeta"></div>
+<p id="summary"></p><p id="why"></p><p id="validity"></p>
+
 <div class="grid">
 <label>Destination<input id="fDestination"></label>
 <label>Activity<input id="fActivity"></label>
@@ -39,11 +62,13 @@
 <label>Marketing Score<input id="fScore" type="number" min="0" max="100"></label>
 <label>Marketing Status<select id="fMStatus"><option></option><option>Candidate</option><option>Shortlist</option><option>Ready</option><option>Published</option><option>Skip</option></select></label>
 <label>Status<select id="fStatus"><option>New</option><option>Reviewed</option><option>Action</option><option>Ignore</option></select></label>
-<label class="wide">Marketing Angle<input id="fAngle"></label>
-<label class="wide">Tags<input id="fTags"></label>
+<label class="wide">Marketing Angle<input id="fAngle" placeholder="What is the marketing hook?"></label>
+<label class="wide">Tags<input id="fTags" placeholder="Safari, family, luxury..."></label>
 <label class="wide">Notes<textarea id="fNotes" rows="4"></textarea></label>
 </div>
 <div class="actions"><a id="source" target="_blank">Open email</a><button type="button" id="skip">Skip</button><button type="button" id="promote">Promote</button><button type="button" id="save">Save & Next</button></div>
 </form></dialog>
-<script src="config.js?v=20261003-1"></script><script src="app.js?v=20261003-1"></script>
+
+<script src="config.js?v=20261003-2"></script>
+<script src="app.js?v=20261003-2"></script>
 </body></html>
