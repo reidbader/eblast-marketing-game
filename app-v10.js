@@ -1,7 +1,7 @@
 const CFG=window.EBLAST_CONFIG;
 const SCOPES="https://www.googleapis.com/auth/spreadsheets";
 let tokenClient,accessToken=null,headers=[],rows=[],activeRow=null,view="inbox",period="daily",topLimit=10;
-let actionHistory=[],rapidRows=[],rapidIndex=0,compareRows=[],comparePair=[];
+let actionHistory=[],rapidRows=[],rapidIndex=0,compareRows=[],comparePair=[],pointsRows=[],pointsIndex=0;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const map=()=>Object.fromEntries(headers.map((h,i)=>[h,i]));
@@ -49,7 +49,7 @@ function isExpired(r){
   const now=new Date();const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
   return exp<today;
 }
-function score(r){const x=Number(val(r,"Marketing Score"));if(x>0)return x;return Math.max(0,Math.min(100,({High:55,Medium:35,Low:15}[val(r,"AI Importance")]||10)+(Number(val(r,"Reid Rank"))||0)*5+({Ready:20,Shortlist:12,Candidate:5,Skip:-50}[val(r,"Marketing Status")]||0)))}
+function score(r){const p=Number(val(r,"Points"));if(Number.isFinite(p)&&val(r,"Points")!=="")return p;const x=Number(val(r,"Marketing Score"));if(Number.isFinite(x)&&val(r,"Marketing Score")!=="")return x;return ({High:55,Medium:35,Low:15}[val(r,"AI Importance")]||10)+(Number(val(r,"Reid Rank"))||0)*5}
 function starts(){
  const now=new Date(),today=new Date(now.getFullYear(),now.getMonth(),now.getDate()),week=new Date(today),month=new Date(now.getFullYear(),now.getMonth(),1);
  week.setDate(week.getDate()-((week.getDay()+6)%7));
@@ -134,7 +134,7 @@ async function writeFields(r,updates){
 }
 function snapshot(r){
  return {row:r,values:{
-  "Status":val(r,"Status"),"Marketing Status":val(r,"Marketing Status"),"Marketing Score":val(r,"Marketing Score"),"Reid Rank":val(r,"Reid Rank"),"Reviewed Date":val(r,"Reviewed Date")
+  "Status":val(r,"Status"),"Marketing Status":val(r,"Marketing Status"),"Marketing Score":val(r,"Marketing Score"),"Points":val(r,"Points"),"Reid Rank":val(r,"Reid Rank"),"Reviewed Date":val(r,"Reviewed Date")
  }};
 }
 async function quickAction(r,mode,{advanceRapid=false}={}){
@@ -142,10 +142,8 @@ async function quickAction(r,mode,{advanceRapid=false}={}){
  const now=new Date().toISOString(),before=snapshot(r);let u={};
  if(mode==="promote"){
   u={"Marketing Status":"Shortlist","Status":"Action","Reviewed Date":val(r,"Reviewed Date")||now};
-  if(!val(r,"Marketing Score")||Number(val(r,"Marketing Score"))<70)u["Marketing Score"]="70";
  }else if(mode==="demote"){
   u={"Marketing Status":"Candidate","Status":"Reviewed","Reviewed Date":val(r,"Reviewed Date")||now};
-  const s=Number(val(r,"Marketing Score"))||50;u["Marketing Score"]=String(Math.max(20,Math.min(59,s-10)));
  }else if(mode==="skip"){
   u={"Marketing Status":"Skip","Status":"Ignore","Reviewed Date":val(r,"Reviewed Date")||now};
  }
@@ -190,7 +188,7 @@ function render(){
  '<div class="supplier-name">'+esc(supplierName(r))+'</div>'+
  '<div class="sender-meta">'+esc(senderLine(r))+'</div>'+
  '<div class="card-title">'+esc(val(r,"Subject"))+'</div></div>'+
- '<div class="card-side"><div class="score">'+score(r)+'</div><span class="deal-badge '+(deal==="No Deal / News"?"none":"")+'">'+esc(deal)+'</span></div></div>'+
+ '<div class="card-side"><div class="score"><b>'+score(r)+'</b><span>pts</span></div><span class="deal-badge '+(deal==="No Deal / News"?"none":"")+'">'+esc(deal)+'</span></div></div>'+
  (val(r,"Deal Summary")?'<p class="deal-summary-card">'+esc(val(r,"Deal Summary")).slice(0,360)+'</p>':'')+
  (val(r,"Summary")?'<p class="card-description">'+esc(val(r,"Summary")).slice(0,420)+'</p>':'')+'<div class="chips">'+cardChips(r)+'</div>'+
  '<div class="card-quick-actions">'+
@@ -230,7 +228,7 @@ function renderRapid(){
  box.innerHTML=
   '<div class="rapid-supplier">'+esc(supplierName(r))+'</div>'+
   '<div class="rapid-meta">'+esc(senderLine(r))+'</div>'+
-  '<div class="rapid-title">'+esc(val(r,"Subject"))+'</div>'+
+  '<div class="rapid-title">'+esc(val(r,"Subject"))+'</div><div class="mode-points">'+score(r)+' pts</div>'+
   '<span class="rapid-deal">'+esc(deal)+'</span>'+
   (val(r,"Deal Summary")?'<div class="rapid-copy"><strong>'+esc(val(r,"Deal Summary"))+'</strong></div>':'')+
   '<div class="rapid-copy">'+esc(val(r,"Summary"))+'</div>'+
@@ -248,7 +246,7 @@ function compareCardHtml(r,side){
  return '<article class="compare-card" data-side="'+side+'">'+
   '<div class="compare-supplier">'+esc(supplierName(r))+'</div>'+
   '<div class="compare-meta">'+esc(senderLine(r))+'</div>'+
-  '<div class="compare-title">'+esc(val(r,"Subject"))+'</div>'+
+  '<div class="compare-title">'+esc(val(r,"Subject"))+'</div><div class="mode-points">'+score(r)+' pts</div>'+
   '<span class="compare-deal">'+esc(deal)+'</span>'+
   (val(r,"Deal Summary")?'<div class="compare-copy"><strong>'+esc(val(r,"Deal Summary")).slice(0,360)+'</strong></div>':'')+
   (val(r,"Summary")?'<div class="compare-copy compare-description">'+esc(val(r,"Summary")).slice(0,420)+'</div>':'')+
@@ -273,9 +271,7 @@ async function chooseCompare(side){
  const winner=comparePair[side],loser=comparePair[side===0?1:0],now=new Date().toISOString();
  const snapW=snapshot(winner),snapL=snapshot(loser);
  const winUpdates={"Marketing Status":"Shortlist","Status":"Action","Reviewed Date":val(winner,"Reviewed Date")||now};
- if(!val(winner,"Marketing Score")||Number(val(winner,"Marketing Score"))<70)winUpdates["Marketing Score"]="70";
- const loseScore=Number(val(loser,"Marketing Score"))||50;
- const loseUpdates={"Marketing Status":"Candidate","Status":"Reviewed","Reviewed Date":val(loser,"Reviewed Date")||now,"Marketing Score":String(Math.max(20,Math.min(59,loseScore-10)))};
+ const loseUpdates={"Marketing Status":"Candidate","Status":"Reviewed","Reviewed Date":val(loser,"Reviewed Date")||now};
  const ok1=await writeFields(winner,winUpdates);
  if(!ok1)return;
  const ok2=await writeFields(loser,loseUpdates);
@@ -296,6 +292,47 @@ async function undoLast(){
  if(rapidIndex>=rapidRows.length)rapidIndex=Math.max(0,rapidRows.length-1);
  renderRapid();
  if($("compare")?.open)renderCompare();
+ if($("points")?.open)renderPoints();
+}
+function pointsEligible(){
+ return filtered().filter(r=>val(r,"Status")!=="Ignore"&&val(r,"Marketing Status")!=="Skip"&&!isExpired(r))
+   .sort((a,b)=>(date(val(b,"Received"))?.getTime()||0)-(date(val(a,"Received"))?.getTime()||0));
+}
+function renderPoints(){
+ pointsRows=pointsEligible();
+ const box=$("pointsCard");
+ if(!pointsRows.length){
+   $("pointsCount").textContent="0 cards";
+   box.innerHTML='<div class="empty">No cards match the current filters.</div>';
+   document.querySelectorAll(".points-adjust").forEach(b=>b.disabled=true);
+   return;
+ }
+ document.querySelectorAll(".points-adjust").forEach(b=>b.disabled=false);
+ if(pointsIndex>=pointsRows.length)pointsIndex=0;
+ const r=pointsRows[pointsIndex],deal=val(r,"Deal Type")||"No Deal / News";
+ $("pointsCount").textContent=(pointsIndex+1)+" of "+pointsRows.length;
+ box.innerHTML=
+   '<div class="rapid-supplier">'+esc(supplierName(r))+'</div>'+
+   '<div class="rapid-meta">'+esc(senderLine(r))+'</div>'+
+   '<div class="rapid-title">'+esc(val(r,"Subject"))+'</div>'+
+   '<div class="points-total">'+score(r)+'<span>points</span></div>'+
+   '<span class="rapid-deal">'+esc(deal)+'</span>'+
+   (val(r,"Deal Summary")?'<div class="rapid-copy"><strong>'+esc(val(r,"Deal Summary"))+'</strong></div>':'')+
+   (val(r,"Validity")&&val(r,"Validity")!=="Not stated"?'<div class="rapid-validity">Validity: '+esc(val(r,"Validity"))+'</div>':'');
+}
+function enterPoints(){pointsRows=pointsEligible();pointsIndex=0;renderPoints();$("points").showModal();}
+function currentPoints(){pointsRows=pointsEligible();return pointsRows[pointsIndex]||pointsRows[0]||null;}
+async function adjustPoints(delta){
+ const r=currentPoints();if(!r)return;
+ const before=snapshot(r);
+ const next=score(r)+Number(delta);
+ if(await writeFields(r,{"Points":String(next)})){
+   actionHistory.push(before);
+   render();
+   pointsRows=pointsEligible();
+   if(pointsRows.length){pointsIndex=(pointsIndex+1)%pointsRows.length;}
+   renderPoints();
+ }
 }
 function enterCompare(){renderCompare();$("compare").showModal();}
 function openEditor(row){
@@ -327,7 +364,7 @@ async function save(mode){
  const next=list()[0];if(view==="inbox"&&next)openEditor(next.sheetRow);
 }
 async function load(){
- const range=encodeURIComponent("'"+CFG.sheetName+"'!A1:AB2000"),resp=await fetch("https://sheets.googleapis.com/v4/spreadsheets/"+encodeURIComponent(CFG.spreadsheetId)+"/values/"+range+"?majorDimension=ROWS",{headers:{Authorization:"Bearer "+accessToken}});
+ const range=encodeURIComponent("'"+CFG.sheetName+"'!A1:AC2000"),resp=await fetch("https://sheets.googleapis.com/v4/spreadsheets/"+encodeURIComponent(CFG.spreadsheetId)+"/values/"+range+"?majorDimension=ROWS",{headers:{Authorization:"Bearer "+accessToken}});
  if(!resp.ok){$("status").textContent="Could not read the sheet.";return}
  const p=await resp.json(),v=p.values||[];headers=v[0]||[];rows=v.slice(1).filter(r=>r.some(Boolean)).map((x,i)=>({sheetRow:i+2,values:[...x]}));rows.forEach(r=>{while(r.values.length<headers.length)r.values.push("")});
  buildMulti("continentOptions","continentSummary","Continent");buildMulti("senderTypeOptions","senderTypeSummary","Sender Type");buildMulti("dealTypeOptions","dealTypeSummary","Deal Type");options("activity","Activity");options("traveler","Traveler Type");render();
@@ -345,7 +382,10 @@ document.querySelectorAll(".top-size").forEach(b=>b.onclick=()=>{document.queryS
 $("save").onclick=()=>save("save");$("skip").onclick=()=>save("skip");$("promote").onclick=()=>save("promote");
 $("rapidBtn").onclick=enterRapid;
 $("compareBtn").onclick=enterCompare;
+$("pointsBtn").onclick=enterPoints;
 $("compareExit").onclick=()=>$("compare").close();
+$("pointsExit").onclick=()=>$("points").close();
+document.querySelectorAll(".points-adjust").forEach(b=>b.onclick=()=>adjustPoints(Number(b.dataset.delta)));
 $("rapidExit").onclick=()=>$("rapid").close();
 $("rapidBack").onclick=undoLast;
 $("rapidPromote").onclick=()=>{const r=currentRapid();if(r)quickAction(r,"promote",{advanceRapid:true})};
