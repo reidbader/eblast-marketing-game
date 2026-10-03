@@ -83,8 +83,28 @@ function buildMulti(containerId,summaryId,field){
    render();
  }));
 }
+function buildSearchableMulti(containerId,summaryId,searchId,field){
+ const box=$(containerId),vals=[...new Set(rows.map(r=>val(r,field)).filter(Boolean))].sort();
+ box.innerHTML=vals.map(v=>'<label class="multi-option" data-filter-value="'+esc(v.toLowerCase())+'"><input type="checkbox" value="'+esc(v)+'"><span>'+esc(v)+'</span></label>').join("");
+ box.querySelectorAll('input[type="checkbox"]').forEach(x=>x.addEventListener("change",()=>{
+   const chosen=selectedMulti(containerId);
+   $(summaryId).textContent=chosen.length?chosen.length+" selected":"All "+field.toLowerCase()+"s";
+   render();
+ }));
+ const search=$(searchId);
+ if(search){
+   search.value="";
+   search.oninput=()=>{
+     const q=search.value.toLowerCase().trim();
+     box.querySelectorAll(".multi-option").forEach(label=>{
+       label.hidden=!!q&&!String(label.dataset.filterValue||"").includes(q);
+     });
+   };
+ }
+}
 function filtered(){
  const q=$("q").value.toLowerCase().trim();
+ const suppliers=selectedMulti("supplierOptions");
  const continents=selectedMulti("continentOptions");
  const senderTypes=selectedMulti("senderTypeOptions");
  const activities=selectedMulti("activityOptions");
@@ -93,6 +113,7 @@ function filtered(){
  const dealScope=$("dealScope")?.value||"";
  return rows.filter(r=>{
   if(q && !["Subject","Sender","Supplier","Summary","Region","Category","Destination","Continent","Sender Type","Activity","Traveler Type","Deal Type","Marketing Angle","Reid Tags"].map(k=>val(r,k)).join(" ").toLowerCase().includes(q)) return false;
+  if(suppliers.length && !suppliers.includes(val(r,"Supplier"))) return false;
   if(continents.length && !continents.includes(val(r,"Continent"))) return false;
   if(senderTypes.length && !senderTypes.includes(val(r,"Sender Type"))) return false;
   if(activities.length && !activities.includes(val(r,"Activity"))) return false;
@@ -406,6 +427,7 @@ async function load(){
  const range=encodeURIComponent("'"+CFG.sheetName+"'!A1:AC2000"),resp=await fetch("https://sheets.googleapis.com/v4/spreadsheets/"+encodeURIComponent(CFG.spreadsheetId)+"/values/"+range+"?majorDimension=ROWS",{headers:{Authorization:"Bearer "+accessToken}});
  if(!resp.ok){$("status").textContent="Could not read the sheet.";return}
  const p=await resp.json(),v=p.values||[];headers=v[0]||[];rows=v.slice(1).filter(r=>r.some(Boolean)).map((x,i)=>({sheetRow:i+2,values:[...x]}));rows.forEach(r=>{while(r.values.length<headers.length)r.values.push("")});
+ buildSearchableMulti("supplierOptions","supplierSummary","supplierSearch","Supplier");
  buildMulti("continentOptions","continentSummary","Continent");
  buildMulti("senderTypeOptions","senderTypeSummary","Sender Type");
  buildMulti("activityOptions","activitySummary","Activity");
