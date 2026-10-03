@@ -25,14 +25,21 @@
 
 <nav>
 <button class="tab active" data-view="inbox">Daily Queue</button>
-<button class="tab" data-view="top10">Top 10</button>
+<button class="tab" data-view="top10">Top</button>
 <button class="tab" data-view="ready">Ready</button>
+<button class="tab" data-view="all">All</button>
 </nav>
 
 <div id="periodTabs" class="period-tabs hidden">
   <button class="period active" data-period="daily">Daily</button>
   <button class="period" data-period="weekly">Weekly</button>
   <button class="period" data-period="monthly">Monthly</button>
+</div>
+
+<div id="topSizeTabs" class="period-tabs hidden">
+  <button class="top-size period active" data-limit="10">Top 10</button>
+  <button class="top-size period" data-limit="100">Top 100</button>
+  <button class="top-size period" data-limit="all">All</button>
 </div>
 
 <button id="filterToggle" class="filter-toggle">Filters</button>
@@ -111,5 +118,5 @@
 </dialog>
 
 <script src="config.js?v=20261003-10"></script>
-<script src="app-v10.js?v=20261003-11"></script>
+<script src="app-v10.js?v=20261003-12"></script>
 </body></html>
