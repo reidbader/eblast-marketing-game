@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#08111f">
 <title>Eblast Marketing Game</title>
-<link rel="stylesheet" href="styles-v7.css">
+<link rel="stylesheet" href="styles-v8.css">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 <div class="shell">
-<header><div><small>EBLAST INTELLIGENCE · MOBILE V7</small><h1>Marketing Game</h1></div><button id="auth">Connect Google</button></header>
+<header><div><small>EBLAST INTELLIGENCE · MOBILE V8</small><h1>Marketing Game</h1></div><button id="auth">Connect Google</button></header>
 
 <section class="scores">
 <div><b id="daily">0</b><span>Daily / 10</span></div>
@@ -48,7 +48,10 @@
 </details>
 <select id="activity"><option value="">All activities</option></select>
 <select id="traveler"><option value="">All travelers</option></select>
-<select id="deal"><option value="">All deal types</option></select>
+<details class="multi-filter" id="dealTypeFilter">
+  <summary id="dealTypeSummary">All deal types</summary>
+  <div class="multi-options" id="dealTypeOptions"></div>
+</details>
 </section>
 
 <p id="status">Connect Google to load the sheet.</p>
@@ -77,6 +80,6 @@
 <div class="actions"><a id="source" target="_blank">Open email</a><button type="button" id="skip">Skip</button><button type="button" id="promote">Promote</button><button type="button" id="save">Save & Next</button></div>
 </form></dialog>
 
-<script src="config.js?v=20261003-7"></script>
-<script src="app-v7.js"></script>
+<script src="config.js?v=20261003-8"></script>
+<script src="app-v8.js"></script>
 </body></html>
