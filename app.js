@@ -110,3 +110,12 @@ $("auth").onclick=auth;
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");view=b.dataset.view;render()});
 document.querySelectorAll(".period").forEach(b=>b.onclick=()=>{document.querySelectorAll(".period").forEach(x=>x.classList.remove("active"));b.classList.add("active");period=b.dataset.period;render()});
 $("save").onclick=()=>save("save");$("skip").onclick=()=>save("skip");$("promote").onclick=()=>save("promote");render();
+
+const filterToggle=document.getElementById("filterToggle");
+if(filterToggle){
+  filterToggle.addEventListener("click",()=>{
+    const panel=document.getElementById("filtersPanel");
+    panel.classList.toggle("open");
+    filterToggle.textContent=panel.classList.contains("open")?"Hide filters":"Filters";
+  });
+}
