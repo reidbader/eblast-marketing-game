@@ -577,3 +577,23 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
 @media(max-width:700px){
   .card-quick-actions{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
+
+/* V15 searchable supplier filter */
+.supplier-options{min-width:300px}
+.multi-search{
+  position:sticky;
+  top:0;
+  z-index:2;
+  width:100%;
+  margin-bottom:7px;
+  background:#091423;
+  color:#f8fafc;
+  border:1px solid #355a82;
+  border-radius:8px;
+  padding:9px 10px;
+  min-height:40px;
+}
+.multi-option[hidden]{display:none!important}
+@media(max-width:700px){
+  .supplier-options{min-width:0}
+}
