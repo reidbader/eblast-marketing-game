@@ -1,6 +1,6 @@
 const CFG=window.EBLAST_CONFIG;
 const SCOPES="https://www.googleapis.com/auth/spreadsheets";
-let tokenClient,accessToken=null,headers=[],rows=[],activeRow=null,view="inbox",period="daily";
+let tokenClient,accessToken=null,headers=[],rows=[],activeRow=null,view="inbox",period="daily",topLimit=10;
 let actionHistory=[],rapidRows=[],rapidIndex=0,compareRows=[],comparePair=[];
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
@@ -107,8 +107,12 @@ function inPeriod(r,p){
 }
 function list(){
  let a=filtered();
+ if(view==="all") return a.sort((a,b)=>score(b)-score(a));
  if(view==="ready") return a.filter(r=>["Ready","Published"].includes(val(r,"Marketing Status"))).sort((a,b)=>score(b)-score(a));
- if(view==="top10") return a.filter(r=>val(r,"Status")!=="Ignore"&&val(r,"Marketing Status")!=="Skip"&&!isExpired(r)&&inPeriod(r,period)).sort((a,b)=>score(b)-score(a)).slice(0,10);
+ if(view==="top10"){
+   const ranked=a.filter(r=>val(r,"Status")!=="Ignore"&&val(r,"Marketing Status")!=="Skip"&&!isExpired(r)&&inPeriod(r,period)).sort((a,b)=>score(b)-score(a));
+   return topLimit==="all"?ranked:ranked.slice(0,topLimit);
+ }
  return a.filter(r=>val(r,"Status")==="New"&&!isExpired(r)).sort((a,b)=>(date(val(b,"Received"))?.getTime()||0)-(date(val(a,"Received"))?.getTime()||0));
 }
 function cardChips(r){
@@ -162,6 +166,7 @@ function supplierName(r){
 function render(){
  progress();
  $("periodTabs").classList.toggle("hidden",view!=="top10");
+ $("topSizeTabs").classList.toggle("hidden",view!=="top10");
  const a=list();
  const expiredHidden=view==="inbox"?filtered().filter(r=>val(r,"Status")==="New"&&isExpired(r)).length:0;
  $("status").textContent=accessToken?(view==="inbox"?a.length+" unreviewed valid items"+(expiredHidden?" · "+expiredHidden+" expired hidden":""):a.length+" items"):"Connect Google to load the sheet.";
@@ -321,6 +326,7 @@ $("auth").onclick=auth;
 ["q","activity","traveler"].forEach(id=>$(id).addEventListener(id==="q"?"input":"change",render));
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");view=b.dataset.view;render()});
 document.querySelectorAll(".period").forEach(b=>b.onclick=()=>{document.querySelectorAll(".period").forEach(x=>x.classList.remove("active"));b.classList.add("active");period=b.dataset.period;render()});
+document.querySelectorAll(".top-size").forEach(b=>b.onclick=()=>{document.querySelectorAll(".top-size").forEach(x=>x.classList.remove("active"));b.classList.add("active");topLimit=b.dataset.limit==="all"?"all":Number(b.dataset.limit);render()});
 $("save").onclick=()=>save("save");$("skip").onclick=()=>save("skip");$("promote").onclick=()=>save("promote");
 $("rapidBtn").onclick=enterRapid;
 $("compareBtn").onclick=enterCompare;
