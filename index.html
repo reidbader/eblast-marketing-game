@@ -61,6 +61,11 @@
   <summary id="travelerSummary">All traveler types</summary>
   <div class="multi-options" id="travelerOptions"></div>
 </details>
+<select id="dealScope" class="deal-scope">
+  <option value="">All deals + news</option>
+  <option value="deals">Deals only</option>
+  <option value="news">No Deal / News only</option>
+</select>
 <details class="multi-filter" id="dealTypeFilter">
   <summary id="dealTypeSummary">All deal types</summary>
   <div class="multi-options" id="dealTypeOptions"></div>
@@ -132,16 +137,16 @@
     </div>
     <div id="pointsCard" class="rapid-card"></div>
     <div class="points-actions">
-      <button type="button" class="points-adjust minus" data-delta="-25">−25</button>
-      <button type="button" class="points-adjust minus" data-delta="-10">−10</button>
       <button type="button" class="points-adjust minus" data-delta="-1">−1</button>
       <button type="button" class="points-adjust plus" data-delta="1">+1</button>
+      <button type="button" class="points-adjust minus" data-delta="-10">−10</button>
       <button type="button" class="points-adjust plus" data-delta="10">+10</button>
+      <button type="button" class="points-adjust minus" data-delta="-25">−25</button>
       <button type="button" class="points-adjust plus" data-delta="25">+25</button>
     </div>
   </section>
 </dialog>
 
 <script src="config.js?v=20261003-10"></script>
-<script src="app-v10.js?v=20261003-17"></script>
+<script src="app-v10.js?v=20261003-18"></script>
 </body></html>
