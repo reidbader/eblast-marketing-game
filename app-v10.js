@@ -90,7 +90,7 @@ function filtered(){
  const dealTypes=selectedMulti("dealTypeOptions");
  const simple=[["Activity","activity"],["Traveler Type","traveler"]];
  return rows.filter(r=>{
-  if(q && !["Subject","Sender","Summary","Region","Category","Destination","Continent","Sender Type","Activity","Traveler Type","Deal Type","Marketing Angle","Reid Tags"].map(k=>val(r,k)).join(" ").toLowerCase().includes(q)) return false;
+  if(q && !["Subject","Sender","Supplier","Summary","Region","Category","Destination","Continent","Sender Type","Activity","Traveler Type","Deal Type","Marketing Angle","Reid Tags"].map(k=>val(r,k)).join(" ").toLowerCase().includes(q)) return false;
   if(continents.length && !continents.includes(val(r,"Continent"))) return false;
   if(senderTypes.length && !senderTypes.includes(val(r,"Sender Type"))) return false;
   if(dealTypes.length && !dealTypes.includes(val(r,"Deal Type"))) return false;
@@ -159,9 +159,15 @@ function rapidEligible(){
  return filtered().filter(r=>val(r,"Status")==="New"&&!isExpired(r)).sort((a,b)=>(date(val(b,"Received"))?.getTime()||0)-(date(val(a,"Received"))?.getTime()||0));
 }
 function supplierName(r){
- const raw=String(val(r,"Sender")||"").trim();
- const noEmail=raw.replace(/<?[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}>?/ig,"").replace(/^["']|["']$/g,"").trim();
- return noEmail||raw||"Unknown supplier";
+ return String(val(r,"Supplier")||val(r,"Sender")||"Unknown supplier").trim();
+}
+function senderLine(r){
+ const person=String(val(r,"Sender")||"").trim();
+ const bits=[];
+ if(person)bits.push(person);
+ if(val(r,"Sender Type"))bits.push(val(r,"Sender Type"));
+ if(val(r,"Continent"))bits.push(val(r,"Continent"));
+ return bits.join(" · ");
 }
 function render(){
  progress();
@@ -176,7 +182,7 @@ function render(){
  '<div class="card-head-row"><div class="card-head-main">'+
  (view==="top10"?'<span class="rank">'+(i+1)+'</span>':'')+
  '<div class="supplier-name">'+esc(supplierName(r))+'</div>'+
- '<div class="sender-meta">'+esc(val(r,"Sender Type"))+' · '+esc(val(r,"Continent"))+'</div>'+
+ '<div class="sender-meta">'+esc(senderLine(r))+'</div>'+
  '<div class="card-title">'+esc(val(r,"Subject"))+'</div></div>'+
  '<div class="card-side"><div class="score">'+score(r)+'</div><span class="deal-badge '+(deal==="No Deal / News"?"none":"")+'">'+esc(deal)+'</span></div></div>'+
  (val(r,"Deal Summary")?'<p class="deal-summary-card">'+esc(val(r,"Deal Summary")).slice(0,360)+'</p>':'')+
@@ -214,7 +220,7 @@ function renderRapid(){
  $("rapidCount").textContent=(rapidIndex+1)+" of "+rapidRows.length+" valid unreviewed";
  box.innerHTML=
   '<div class="rapid-supplier">'+esc(supplierName(r))+'</div>'+
-  '<div class="rapid-meta">'+esc(val(r,"Sender Type"))+' · '+esc(val(r,"Continent"))+'</div>'+
+  '<div class="rapid-meta">'+esc(senderLine(r))+'</div>'+
   '<div class="rapid-title">'+esc(val(r,"Subject"))+'</div>'+
   '<span class="rapid-deal">'+esc(deal)+'</span>'+
   (val(r,"Deal Summary")?'<div class="rapid-copy"><strong>'+esc(val(r,"Deal Summary"))+'</strong></div>':'')+
@@ -232,7 +238,7 @@ function compareCardHtml(r,side){
  const deal=val(r,"Deal Type")||"No Deal / News";
  return '<article class="compare-card" data-side="'+side+'">'+
   '<div class="compare-supplier">'+esc(supplierName(r))+'</div>'+
-  '<div class="compare-meta">'+esc(val(r,"Sender Type"))+' · '+esc(val(r,"Continent"))+'</div>'+
+  '<div class="compare-meta">'+esc(senderLine(r))+'</div>'+
   '<div class="compare-title">'+esc(val(r,"Subject"))+'</div>'+
   '<span class="compare-deal">'+esc(deal)+'</span>'+
   (val(r,"Deal Summary")?'<div class="compare-copy"><strong>'+esc(val(r,"Deal Summary")).slice(0,360)+'</strong></div>':'')+
@@ -312,7 +318,7 @@ async function save(mode){
  const next=list()[0];if(view==="inbox"&&next)openEditor(next.sheetRow);
 }
 async function load(){
- const range=encodeURIComponent("'"+CFG.sheetName+"'!A1:AA2000"),resp=await fetch("https://sheets.googleapis.com/v4/spreadsheets/"+encodeURIComponent(CFG.spreadsheetId)+"/values/"+range+"?majorDimension=ROWS",{headers:{Authorization:"Bearer "+accessToken}});
+ const range=encodeURIComponent("'"+CFG.sheetName+"'!A1:AB2000"),resp=await fetch("https://sheets.googleapis.com/v4/spreadsheets/"+encodeURIComponent(CFG.spreadsheetId)+"/values/"+range+"?majorDimension=ROWS",{headers:{Authorization:"Bearer "+accessToken}});
  if(!resp.ok){$("status").textContent="Could not read the sheet.";return}
  const p=await resp.json(),v=p.values||[];headers=v[0]||[];rows=v.slice(1).filter(r=>r.some(Boolean)).map((x,i)=>({sheetRow:i+2,values:[...x]}));rows.forEach(r=>{while(r.values.length<headers.length)r.values.push("")});
  buildMulti("continentOptions","continentSummary","Continent");buildMulti("senderTypeOptions","senderTypeSummary","Sender Type");buildMulti("dealTypeOptions","dealTypeSummary","Deal Type");options("activity","Activity");options("traveler","Traveler Type");render();
