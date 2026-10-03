@@ -161,6 +161,12 @@ function rapidEligible(){
 function supplierName(r){
  return String(val(r,"Supplier")||val(r,"Sender")||"Unknown supplier").trim();
 }
+function emailHref(r){
+ const stored=String(val(r,"Source Email")||"").trim();
+ const id=String(val(r,"Gmail Message ID")||"").trim();
+ if(stored)return stored;
+ return id?"https://mail.google.com/mail/u/?authuser=reid.bader%40fora.travel#all/"+encodeURIComponent(id):"#";
+}
 function senderLine(r){
  const person=String(val(r,"Sender")||"").trim();
  const bits=[];
@@ -188,6 +194,7 @@ function render(){
  (val(r,"Deal Summary")?'<p class="deal-summary-card">'+esc(val(r,"Deal Summary")).slice(0,360)+'</p>':'')+
  (val(r,"Summary")?'<p class="card-description">'+esc(val(r,"Summary")).slice(0,420)+'</p>':'')+'<div class="chips">'+cardChips(r)+'</div>'+
  '<div class="card-quick-actions">'+
+ '<a class="card-email" data-email-link href="'+esc(emailHref(r))+'" target="_blank" rel="noopener">Email</a>'+
  '<button class="card-back" data-action="back">Back</button>'+
  '<button class="card-demote" data-action="demote">Demote</button>'+
  '<button class="card-skip" data-action="skip">Skip</button>'+
@@ -196,6 +203,8 @@ function render(){
  }).join(""):'<div class="empty">'+(view==="inbox"?"No new items in the queue.":"No items match this view.")+'</div>';
  document.querySelectorAll(".card").forEach(c=>{
   c.addEventListener("click",e=>{
+   const email=e.target.closest("[data-email-link]");
+   if(email){e.stopPropagation();return;}
    const btn=e.target.closest("button[data-action]");
    if(btn){
     e.stopPropagation();
@@ -293,7 +302,7 @@ function openEditor(row){
  activeRow=rows.find(r=>r.sheetRow===row);if(!activeRow)return;
  $("sender").textContent=val(activeRow,"Sender");$("subject").textContent=val(activeRow,"Subject");$("dealSummary").textContent=val(activeRow,"Deal Summary")||"";$("summary").textContent=val(activeRow,"Summary");$("why").textContent=val(activeRow,"Why It Matters");$("validity").textContent=val(activeRow,"Validity")&&val(activeRow,"Validity")!=="Not stated"?"Validity: "+val(activeRow,"Validity"):"";
  $("detailMeta").innerHTML=cardChips(activeRow);
- $("source").href=val(activeRow,"Source Email")||"#";
+ $("source").href=emailHref(activeRow);
  [["fDestination","Destination"],["fActivity","Activity"],["fTraveler","Traveler Type"],["fDeal","Deal Type"],["fRank","Reid Rank"],["fScore","Marketing Score"],["fMStatus","Marketing Status"],["fStatus","Status"],["fAngle","Marketing Angle"],["fTags","Reid Tags"],["fNotes","Notes"]].forEach(([id,f])=>$(id).value=val(activeRow,f));
  $("editor").showModal();
 }
