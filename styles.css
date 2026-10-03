@@ -73,3 +73,25 @@ dialog form{padding:16px;max-height:94vh;overflow:auto}.close{float:right;backgr
  .actions button{min-height:48px;font-size:13px;padding:8px}
  #save{margin-left:0}
 }
+/* Mobile width containment fix */
+html,body{width:100%;max-width:100%;overflow-x:hidden}
+.shell{width:100%;max-width:920px}
+#cards{width:100%;min-width:0}
+.card{width:100%;max-width:100%;min-width:0;overflow:hidden}
+.card-top{width:100%;min-width:0}
+.card-top>div:first-child{min-width:0;flex:1 1 auto}
+.card h3,.card p,.card small{max-width:100%;overflow-wrap:anywhere;word-break:break-word}
+.chips,.detail-meta{max-width:100%;min-width:0}
+.chip{max-width:100%;overflow-wrap:anywhere;word-break:break-word;white-space:normal}
+.score{flex:0 0 auto}
+.filters{min-width:0}
+.filters>*{min-width:0;max-width:100%}
+@media(max-width:700px){
+  .shell{width:100%;max-width:100vw;padding-left:10px;padding-right:10px}
+  #cards{grid-template-columns:minmax(0,1fr)}
+  .card{width:100%;max-width:calc(100vw - 20px)}
+  .card-top{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start}
+  .card-top>div:first-child{min-width:0}
+  .chips{display:flex;flex-wrap:wrap}
+  .filters{width:100%;max-width:100%}
+}
